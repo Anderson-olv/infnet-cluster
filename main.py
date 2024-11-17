@@ -1,125 +1,204 @@
+import os
 import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans, AgglomerativeClustering
-from sklearn.preprocessing import MinMaxScaler
+from sklearn_extra.cluster import KMedoids
 from scipy.cluster.hierarchy import dendrogram, linkage
 import matplotlib.pyplot as plt
-import seaborn as sns
+from scipy.stats import zscore
 
 
-# Carregar os dados
-url = "archive/Country-data.csv"
-data = pd.read_csv(url)
+class CountryClustering:
+    def __init__(self, filepath):
+        self.data = pd.read_csv(filepath)
+        self.scaled_data = None
+        self.kmeans = None
+        self.kmedoids = None
+        self.hierarchical = None
+        self.clusters_kmeans = None
+        self.clusters_hierarchical = None
+        self.clusters_kmedoids = None
+        self.centroids = None
 
-# Verificando as primeiras linhas e informações gerais do dataset
-print(data.head())
-print(data.info())
-print(f"Total de países: {data['country'].nunique()}")
+    def count_countries(self):
+        """Conta e retorna o número de países únicos no dataset."""
+        if "country" in self.data.columns:
+            num_countries = self.data["country"].nunique()
+            print(f"Número de países únicos no dataset: {num_countries}")
+            return num_countries
+        else:
+            raise KeyError("A coluna 'country' não está disponível no dataset.")
 
-# Remover a coluna "country" se ela não for usada na clusterização
-data = data.drop(columns=['country'])
+    def plot_variable_ranges(self, output_dir="plots_original"):
+        """Mostra gráficos da faixa dinâmica das variáveis antes do pré-processamento."""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-# 1. Análise Exploratória com Gráficos
-# Histograma para cada variável
-data.hist(bins=20, figsize=(15, 10))
-plt.suptitle("Distribuição das Variáveis")
-plt.show()
+        numeric_columns = self.data.select_dtypes(include=np.number).columns
 
-# Boxplots para observar a faixa dinâmica e outliers de cada variável
-plt.figure(figsize=(15, 8))
-sns.boxplot(data=data)
-plt.title("Boxplot das Variáveis")
-plt.xticks(rotation=45)
-plt.show()
+        # Boxplot
+        plt.figure(figsize=(10, 6))
+        self.data[numeric_columns].boxplot()
+        plt.title("Faixa Dinâmica das Variáveis (Dados Originais)")
+        plt.ylabel("Valores")
+        plt.xlabel("Variáveis")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.savefig(f"{output_dir}/boxplot_original.png")
+        plt.show()
+        plt.close()
 
-# Mapa de calor para ver a correlação entre as variáveis
-plt.figure(figsize=(10, 8))
-sns.heatmap(data.corr(), annot=True, cmap="coolwarm", fmt=".2f")
-plt.title("Mapa de Calor das Correlações")
-plt.show()
+        # Histogramas
+        for column in numeric_columns:
+            plt.figure(figsize=(6, 4))
+            plt.hist(self.data[column], bins=15, alpha=0.7, edgecolor='black')
+            plt.title(f"Distribuição da Variável (Original): {column}")
+            plt.xlabel(column)
+            plt.ylabel("Frequência")
+            plt.tight_layout()
+            plt.savefig(f"{output_dir}/hist_{column}_original.png")
+            plt.show()
+            plt.close()
 
-# 2. Pré-processamento dos Dados
-# Normalizando os dados para a mesma escala usando MinMaxScaler
-scaler = MinMaxScaler()
-data_scaled = pd.DataFrame(scaler.fit_transform(data), columns=data.columns)
+    def preprocess_data(self):
+        """Realiza o pré-processamento dos dados."""
+        self.data.dropna(inplace=True)
+        z_scores = np.abs(zscore(self.data.iloc[:, 1:]))
+        self.data = self.data[(z_scores < 3).all(axis=1)]
+        self.data.reset_index(drop=True, inplace=True)
 
-# Verificando os dados escalados
-print(data_scaled.describe())
+        data_values = self.data.drop(columns=['country'])
+        scaler = StandardScaler()
+        self.scaled_data = scaler.fit_transform(data_values)
+        print("Pré-processamento concluído!")
+        return self.scaled_data
 
-# O dataset está pronto para a clusterização
-# 1. Clusterização com K-Means
-# Definindo o número de clusters como 3
-kmeans = KMeans(n_clusters=3, random_state=42)
-kmeans_labels = kmeans.fit_predict(data_scaled)
+    def apply_kmeans(self, n_clusters=3):
+        """Aplica o algoritmo K-Médias."""
+        print("\nAplicando K-Médias...")
+        self.kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+        self.clusters_kmeans = self.kmeans.fit_predict(self.scaled_data)
+        self.centroids = self.kmeans.cluster_centers_
+        self.data["Cluster_KMeans"] = self.clusters_kmeans
+        print("K-Médias concluído! Clusters atribuídos.")
 
-# Adicionando os rótulos dos clusters ao DataFrame
-data_scaled['KMeans_Cluster'] = kmeans_labels
+    def apply_kmedoids(self, n_clusters=3):
+        """Aplica o algoritmo K-Medoides."""
+        print("\nAplicando K-Medoides...")
+        self.kmedoids = KMedoids(n_clusters=n_clusters, random_state=42, method="pam")
+        self.clusters_kmedoids = self.kmedoids.fit_predict(self.scaled_data)
+        self.data["Cluster_KMedoids"] = self.clusters_kmedoids
+        print("K-Medoides concluído! Clusters atribuídos.")
 
-# Análise de cada cluster
-print("Distribuição dos clusters K-Means:")
-print(data_scaled['KMeans_Cluster'].value_counts())
+    def apply_hierarchical(self, n_clusters=3):
+        """Aplica a Clusterização Hierárquica."""
+        print("\nAplicando Clusterização Hierárquica...")
+        self.hierarchical = AgglomerativeClustering(n_clusters=n_clusters, metric="euclidean", linkage="ward")
+        self.clusters_hierarchical = self.hierarchical.fit_predict(self.scaled_data)
+        self.data["Cluster_Hierarchical"] = self.clusters_hierarchical
+        print("Clusterização Hierárquica concluída! Clusters atribuídos.")
 
-# Calcular a média das dimensões em cada grupo para interpretação
-kmeans_clusters_summary = data_scaled.groupby('KMeans_Cluster').mean()
-print("\nMédia das variáveis em cada cluster K-Means:")
-print(kmeans_clusters_summary)
+    def analyze_clusters(self):
+        """Gera análises dos clusters obtidos."""
+        numeric_columns = self.data.select_dtypes(include=np.number).columns
+        analyses = {}
 
-# Identificar o país que melhor representa cada cluster (mais próximo do centróide)
-# Como removemos a coluna 'country' no pré-processamento, vamos recarregar para análise
-original_data = pd.read_csv("archive/Country-data.csv")
-data_scaled['country'] = original_data['country']
+        if "Cluster_KMeans" in self.data.columns:
+            analyses["Cluster_KMeans"] = self.data.groupby("Cluster_KMeans")[numeric_columns].agg(['mean', 'median', 'std'])
+            print("\nAnálise dos Clusters (K-Médias):")
+            print(analyses["Cluster_KMeans"])
 
-# Corrigindo a seleção do país representativo
-centroids = kmeans.cluster_centers_
+        if "Cluster_Hierarchical" in self.data.columns:
+            analyses["Cluster_Hierarchical"] = self.data.groupby("Cluster_Hierarchical")[numeric_columns].agg(['mean', 'median', 'std'])
+            print("\nAnálise dos Clusters (Hierárquica):")
+            print(analyses["Cluster_Hierarchical"])
 
-for i in range(3):
-    # Selecionar o cluster atual
-    cluster_data = data_scaled[data_scaled['KMeans_Cluster'] == i]
-    
-    # Calcular a distância de cada país ao centróide do cluster
-    distances = ((cluster_data.iloc[:, :-2] - centroids[i]) ** 2).sum(axis=1)
-    
-    # Encontrar o país com a menor distância ao centróide
-    representative_country = cluster_data.loc[distances.idxmin(), 'country']
-    print(f"País que melhor representa o Cluster {i}: {representative_country}")
+        if "Cluster_KMedoids" in self.data.columns:
+            analyses["Cluster_KMedoids"] = self.data.groupby("Cluster_KMedoids")[numeric_columns].agg(['mean', 'median', 'std'])
+            print("\nAnálise dos Clusters (K-Medoides):")
+            print(analyses["Cluster_KMedoids"])
 
-# Visualizando a distribuição das dimensões para cada cluster
-plt.figure(figsize=(10, 6))
-kmeans_clusters_summary.plot(kind='bar', figsize=(15, 6), title="Distribuição média das variáveis em cada cluster K-Means")
-plt.ylabel("Média Normalizada")
-plt.xlabel("Cluster")
-plt.legend(loc='upper right')
-plt.show()
+        return analyses
 
-# 2. Clusterização Hierárquica
-# Criando o linkage para a Clusterização Hierárquica
-linkage_matrix = linkage(data_scaled.iloc[:, :-2], method='ward')
+    def represent_clusters(self):
+        """Identifica o país que melhor representa cada cluster no K-Médias."""
+        representatives = []
+        for cluster in range(self.kmeans.n_clusters):
+            cluster_data = self.data[self.data["Cluster_KMeans"] == cluster]
+            indices = cluster_data.index
+            distances = np.linalg.norm(self.scaled_data[indices] - self.centroids[cluster], axis=1)
+            representative_country = cluster_data.iloc[np.argmin(distances)]["country"]
+            representatives.append((cluster, representative_country))
+        return representatives
 
-# Dendograma
-plt.figure(figsize=(12, 8))
-dendrogram(linkage_matrix, labels=data_scaled['country'].values, leaf_rotation=90, leaf_font_size=10)
-plt.title("Dendrograma da Clusterização Hierárquica")
-plt.xlabel("Países")
-plt.ylabel("Distância")
-plt.show()
+    def plot_dendrogram(self, output_dir="plots"):
+        """Gera e salva o dendrograma da Clusterização Hierárquica."""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-# Aplicando o modelo de Clusterização Hierárquica com 3 clusters para comparação
-hierarchical = AgglomerativeClustering(n_clusters=3, metric='euclidean', linkage='ward')
-hierarchical_labels = hierarchical.fit_predict(data_scaled.iloc[:, :-2])
+        plt.figure(figsize=(10, 7))
+        linked = linkage(self.scaled_data, method="ward")
+        dendrogram(linked, labels=self.data["country"].values, leaf_rotation=90, leaf_font_size=8)
+        plt.title("Dendrograma - Clusterização Hierárquica")
+        plt.xlabel("Países")
+        plt.ylabel("Distância Euclidiana")
+        plt.tight_layout()
+        plt.savefig(f"{output_dir}/dendrograma.png")
+        plt.show()
 
-# Adicionando os rótulos da clusterização hierárquica ao DataFrame
-data_scaled['Hierarchical_Cluster'] = hierarchical_labels
+    def compare_methods(self):
+        """Compara os clusters gerados por K-Médias e Clusterização Hierárquica."""
+        if "Cluster_KMeans" in self.data.columns and "Cluster_Hierarchical" in self.data.columns:
+            comparison = pd.crosstab(self.data["Cluster_KMeans"], self.data["Cluster_Hierarchical"])
+            print("\nComparação entre K-Médias e Clusterização Hierárquica:")
+            print(comparison)
+            return comparison
+        else:
+            raise KeyError("Os clusters K-Médias e/ou Hierárquicos não estão disponíveis no dataset.")
 
-# Comparação das distribuições de clusters K-Means vs Hierárquico
-print("\nDistribuição dos clusters Hierárquicos:")
-print(data_scaled['Hierarchical_Cluster'].value_counts())
+    def plot_clusters(self, output_dir="plots"):
+        """Gera e salva gráficos de dispersão para visualização dos clusters."""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-# 3. Comparação dos Resultados de Clusterização
-# Comparando K-Means e Clusterização Hierárquica
-comparison = data_scaled[['country', 'KMeans_Cluster', 'Hierarchical_Cluster']]
-print("\nComparação dos resultados de clusterização entre K-Means e Clusterização Hierárquica:")
-print(comparison)
+        if self.clusters_kmeans is None:
+            raise ValueError("Os clusters K-Médias ainda não foram gerados. Execute apply_kmeans primeiro.")
 
-# Análise dos clusters
-sns.countplot(x="KMeans_Cluster", hue="Hierarchical_Cluster", data=data_scaled)
-plt.title("Comparação de Clusterização: K-Means vs Hierárquica")
-plt.show()
+        plt.figure(figsize=(10, 6))
+        for cluster in range(self.kmeans.n_clusters):
+            cluster_data = self.data[self.data["Cluster_KMeans"] == cluster]
+            plt.scatter(
+                cluster_data.iloc[:, 1],  # Exemplo: Variável X
+                cluster_data.iloc[:, 2],  # Exemplo: Variável Y
+                s=50, label=f"Cluster {cluster + 1}"
+            )
+
+        plt.scatter(
+            self.centroids[:, 0], self.centroids[:, 1],
+            s=200, c="yellow", label="Centróides", marker="o", edgecolor="black"
+        )
+
+        plt.title("Clusters (K-Médias)")
+        plt.xlabel("Variável X")
+        plt.ylabel("Variável Y")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(f"{output_dir}/clusters_scatter.png")
+        plt.show()
+
+
+if __name__ == "__main__":
+    clustering = CountryClustering(filepath="Country-data.csv")
+    clustering.count_countries()
+    clustering.plot_variable_ranges()
+    clustering.preprocess_data()
+    clustering.apply_kmeans(n_clusters=3)
+    clustering.plot_clusters(output_dir="plots")
+    clustering.apply_kmedoids(n_clusters=3)
+    clustering.apply_hierarchical(n_clusters=3)
+    clustering.plot_dendrogram()
+    clustering.analyze_clusters()
+    comparison = clustering.compare_methods()
+    print("\nComparação entre Métodos:\n", comparison)

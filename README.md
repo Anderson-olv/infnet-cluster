@@ -36,8 +36,14 @@ Para as questões a seguir, usaremos uma base de dados e faremos a análise expl
 1. Baixe os dados disponibilizados na plataforma Kaggle sobre dados sócio-econômicos e de saúde que determinam o índice de desenvolvimento de um país. Esses dados estão disponibilizados através do link: https://www.kaggle.com/datasets/rohan0301/unsupervised-learning-on-country-data
    
 2. Quantos países existem no dataset?
+   ```
+   Número de países: 167
+   ```
    
 3. Mostre através de gráficos a faixa dinâmica das variáveis que serão usadas nas tarefas de clusterização. Analise os resultados mostrados. O que deve ser feito com os dados antes da etapa de clusterização?
+   ```
+   Gráficos salvos em plots_original na raiz do projeto.
+   ```
    
 4. Realize o pré-processamento adequado dos dados.
 
