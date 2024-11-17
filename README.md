@@ -4,18 +4,31 @@
 ## Parte 1: Infraestrutura
 Para as questões a seguir, você deverá executar códigos em um notebook Jupyter, rodando em ambiente local, certifique-se que:
 
-1. Você está rodando em Python 3.9+
-   
-2. Você está usando um ambiente virtual: Virtualenv ou Anaconda
-   
-3. Todas as bibliotecas usadas nesse exercícios estão instaladas em um ambiente virtual específico
-   
-4. Gere um arquivo de requerimentos (requirements.txt) com os pacotes necessários. É necessário se certificar que a versão do pacote está disponibilizada.
-   
-5. Tire um printscreen do ambiente que será usado rodando em sua máquina.
-   
-6. Disponibilize os códigos gerados, assim como os artefatos acessórios (requirements.txt) e instruções em um repositório GIT público. (se isso não for feito, o diretório com esses arquivos deverá ser enviado compactado no moodle).
+1. Você está rodando em Python 3.9+  
+   ```
+   Sim Python 3.12.3, printscreen se encontra na pasta pritscreen.
+   ```
 
+2. Você está usando um ambiente virtual: Virtualenv ou Anaconda  
+   ```
+   Sim Virtualenv, printscreen se encontra na pasta pritscreen.
+   ```
+
+3. Todas as bibliotecas usadas nesse exercícios estão instaladas em um ambiente virtual específico
+   ```
+   Sim bibliotecas, printscreen se encontra na pasta pritscreen.
+   ``` 
+4. Gere um arquivo de requerimentos (requirements.txt) com os pacotes necessários. É necessário se certificar que a versão do pacote está disponibilizada.
+   ```
+   requirements.tx gerado, se encontra na raiz do projeto.
+   ```
+5. Tire um printscreen do ambiente que será usado rodando em sua máquina.
+   ```
+   Virtualenv, printscreen se encontra na pasta pritscreen.
+   ```  
+6. Disponibilize os códigos gerados, assim como os artefatos acessórios (requirements.txt) e instruções em um repositório GIT público. (se isso não for feito, o diretório com esses arquivos deverá ser enviado compactado no moodle).
+    ```bash
+   git clone https://github.com/Anderson-olv/infnet-cluster.git
 
 ## Parte 2: Escolha de base de dados
 Para as questões a seguir, usaremos uma base de dados e faremos a análise exploratória dos dados, antes da clusterização.
@@ -39,7 +52,7 @@ Para os dados pré-processados da etapa anterior, você irá:
 2. Para os resultados, do K-Médias:  
    a. Interprete cada um dos clusters obtidos citando:  
     i. Qual a distribuição das dimensões em cada grupo  
-    
+
     ii. O país, de acordo com o algoritmo, melhor representa o seu agrupamento. Justifique  
 
 3. Para os resultados da Clusterização Hierárquica, apresente o dendograma e interprete os resultados:
