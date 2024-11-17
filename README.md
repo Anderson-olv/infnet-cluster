@@ -32,14 +32,15 @@ Para as questões a seguir, usaremos uma base de dados e faremos a análise expl
 ## Parte 3: Clusterização
 Para os dados pré-processados da etapa anterior, você irá:
 
-1. Realizar o agrupamento dos países em 3 grupos distintos. Para tal, use:
+1. Realizar o agrupamento dos países em 3 grupos distintos. Para tal, use:  
    a. K-Médias  
    b. Clusterização Hierárquica  
 
 2. Para os resultados, do K-Médias:  
-   a. Interprete cada um dos clusters obtidos citando:
-      i. Qual a distribuição das dimensões em cada grupo  
-      ii. O país, de acordo com o algoritmo, melhor representa o seu agrupamento. Justifique  
+   a. Interprete cada um dos clusters obtidos citando:  
+    i. Qual a distribuição das dimensões em cada grupo  
+    
+    ii. O país, de acordo com o algoritmo, melhor representa o seu agrupamento. Justifique  
 
 3. Para os resultados da Clusterização Hierárquica, apresente o dendograma e interprete os resultados:
 
