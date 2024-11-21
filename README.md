@@ -93,15 +93,11 @@ Para os dados pré-processados da etapa anterior, você irá:
       Baixo PIB per capita (~1,920).
       Exemplo: Tanzânia (país representativo).
 
-      **Resumo:** 
+      Resumo:  
       Os clusters identificam grupos de países:
       1. Desenvolvidos (Cluster 1).
       2. Em desenvolvimento (Cluster 2).
       3. Menos desenvolvidos (Cluster 3).
-
-
-
-
       ```
     ii. O país, de acordo com o algoritmo, melhor representa o seu agrupamento. Justifique
       ```
