@@ -204,8 +204,7 @@ Para os dados pré-processados da etapa anterior, você irá:
 2. O algoritmo de K-médias converge até encontrar os centróides que melhor descrevem os clusters encontrados (até o deslocamento entre as interações dos centróides ser mínimo). Lembrando que o centróide é o baricentro do cluster em questão e não representa, em via de regra, um dado existente na base. Refaça o algoritmo apresentado na questão 1 a fim de garantir que o cluster seja representado pelo dado mais próximo ao seu baricentro em todas as iterações do algoritmo.
    Obs: nesse novo algoritmo, o dado escolhido será chamado medóide.
    ```
-   https://github.com/Anderson-olv/infnet-cluster.git
-   Tive problema em instalar a biblioteca scikit-learn-extra, com isso realizei a criação no colab, tem um nova branches K-Medoids
+   Tive problema em instalar a biblioteca scikit-learn-extra, com isso realizei a criação no colab K_Medoids.ipynb.
    ```
 
 3. O algoritmo de K-médias é sensível a outliers nos dados. Explique.
